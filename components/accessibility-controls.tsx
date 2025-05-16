@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Accessibility, ZoomIn, ZoomOut, Eye } from "lucide-react"
+import { TypingSoundControls } from "./typing-sound-controls"
 
 export default function AccessibilityControls() {
   const [isOpen, setIsOpen] = useState(false)
@@ -67,7 +68,7 @@ export default function AccessibilityControls() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-14 left-0 terminal-bg terminal-border border rounded-lg p-3 shadow-lg w-48"
+            className="absolute bottom-14 left-0 terminal-bg terminal-border border rounded-lg p-3 shadow-lg w-64"
           >
             <h3 className="terminal-title text-sm mb-2 border-b terminal-border pb-1">Accessibility</h3>
 
@@ -110,6 +111,9 @@ export default function AccessibilityControls() {
                   <span>{highContrast ? "ON" : "OFF"}</span>
                 </button>
               </div>
+
+              {/* Typing Sounds Controls */}
+              <TypingSoundControls />
             </div>
           </motion.div>
         )}

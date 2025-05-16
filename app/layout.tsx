@@ -4,6 +4,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import ThemeSwitcher from "@/components/theme-switcher"
 import AccessibilityControls from "@/components/accessibility-controls"
+import { TypingSoundsProvider } from "@/components/typing-sounds"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,9 +27,11 @@ export default function RootLayout({
         <link rel="preload" href="https://unpkg.com/three@0.157.0/build/three.module.js" as="script" />
       </head>
       <body className={inter.className}>
-        {children}
-        <ThemeSwitcher />
-        <AccessibilityControls />
+        <TypingSoundsProvider>
+          {children}
+          <ThemeSwitcher />
+          <AccessibilityControls />
+        </TypingSoundsProvider>
       </body>
     </html>
   )

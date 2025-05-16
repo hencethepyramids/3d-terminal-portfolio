@@ -16,13 +16,13 @@ export default function SocialLinks({ className = "", showShareButton = false, p
   const socialLinks = [
     {
       name: "GitHub",
-      url: "https://github.com/yourusername",
+      url: "https://github.com/hencethepyramids",
       icon: <Github size={18} />,
       color: "hover:text-gray-100",
     },
     {
       name: "LinkedIn",
-      url: "https://linkedin.com/in/yourusername",
+      url: "https://www.linkedin.com/in/ethan-ellerstein-5b4610240/",
       icon: <Linkedin size={18} />,
       color: "hover:text-blue-400",
     },

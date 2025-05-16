@@ -1,8 +1,9 @@
 ## ✅ Feature Development Checklist
 
 ### 1. Typing Sound Options
-- [ ] Add different keyboard sound profiles (mechanical, soft, retro)
-- [ ] Allow users to adjust volume or disable typing sounds
+- [x] Add different keyboard sound profiles (mechanical, soft, retro)
+- [x] Allow users to adjust volume or disable typing sounds
+- [ ] Ensure the selected sound profile plays (not just mechanical)
 
 ### 2. Terminal History Persistence
 - [ ] Save command history between sessions using `localStorage`

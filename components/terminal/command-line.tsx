@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useTypingSounds } from "../typing-sounds"
 
 interface CommandLineProps {
   onSubmit: (command: string) => void
@@ -11,9 +12,10 @@ interface CommandLineProps {
 }
 
 export default function CommandLine({ onSubmit, onNavigate }: CommandLineProps) {
-  const [command, setCommand] = useState("")
+  const [input, setInput] = useState("")
   const [cursorVisible, setCursorVisible] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { playKeydownSound, playKeyupSound } = useTypingSounds()
 
   useEffect(() => {
     // Blink cursor
@@ -37,32 +39,33 @@ export default function CommandLine({ onSubmit, onNavigate }: CommandLineProps) 
   }, [])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    playKeydownSound()
+
     // Handle key navigation
     if (e.key === "ArrowUp") {
       e.preventDefault()
-      const prevCommand = onNavigate("up")
-      if (prevCommand) setCommand(prevCommand)
+      const command = onNavigate("up")
+      setInput(command)
     } else if (e.key === "ArrowDown") {
       e.preventDefault()
-      const nextCommand = onNavigate("down")
-      setCommand(nextCommand)
+      const command = onNavigate("down")
+      setInput(command)
     } else if (e.key === "Tab") {
       e.preventDefault()
       // TODO: Implement tab completion
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit(command)
-    setCommand("")
+  const handleKeyUp = () => {
+    playKeyupSound()
   }
 
-  // Play key sound on keypress
-  const playKeySound = () => {
-    const keySound = new Audio("/sounds/key.mp3")
-    keySound.volume = 0.05
-    keySound.play().catch(() => {})
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (input.trim()) {
+      onSubmit(input)
+      setInput("")
+    }
   }
 
   return (
@@ -73,12 +76,12 @@ export default function CommandLine({ onSubmit, onNavigate }: CommandLineProps) 
           <input
             ref={inputRef}
             type="text"
-            value={command}
+            value={input}
             onChange={(e) => {
-              setCommand(e.target.value)
-              playKeySound()
+              setInput(e.target.value)
             }}
             onKeyDown={handleKeyDown}
+            onKeyUp={handleKeyUp}
             className="w-full bg-transparent outline-none terminal-text caret-transparent"
             autoComplete="off"
             spellCheck="false"
@@ -86,7 +89,7 @@ export default function CommandLine({ onSubmit, onNavigate }: CommandLineProps) 
           {cursorVisible && (
             <motion.span
               className="absolute h-5 w-2.5 terminal-cursor"
-              style={{ left: `${command.length * 0.6}em` }}
+              style={{ left: `${input.length * 0.6}em` }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.1 }}

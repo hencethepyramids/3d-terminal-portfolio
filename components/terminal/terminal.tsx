@@ -1,5 +1,6 @@
 "use client"
 
+import * as React from "react"
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import CommandLine from "./command-line"
@@ -9,14 +10,22 @@ import type { CommandHistory } from "@/lib/types"
 import dynamic from "next/dynamic"
 import { Home } from "lucide-react"
 import SocialLinks from "../social-links"
+import { TypingSoundControls } from "../typing-sound-controls"
+import { TypingSoundsProvider } from "../typing-sounds"
 
 // Dynamically import the RoomExplorer component
 const RoomExplorer = dynamic(() => import("@/components/room-explorer/room-explorer"), {
   ssr: false,
 })
 
-// Define button contexts and their associated commands
-const buttonContexts = {
+type ButtonContext = "main" | "help" | "projects" | "skills" | "files"
+
+interface ButtonConfig {
+  command: string
+  label: string | React.ReactNode
+}
+
+const buttonContexts: Record<ButtonContext, ButtonConfig[]> = {
   main: [
     { command: "whoami", label: "About Me" },
     { command: "skills", label: "Skills" },
@@ -52,13 +61,13 @@ const buttonContexts = {
   ],
 }
 
-function CommandButton({ command, label, onClick }: { command: string; label?: string; onClick?: () => void }) {
+function CommandButton({ command, label, onClick }: { command: string; label: string | React.ReactNode; onClick?: () => void }) {
   return (
     <button
       onClick={() => (onClick ? onClick() : null)}
       className="terminal-button rounded px-3 py-1.5 text-sm hover:bg-opacity-50 transition-colors"
     >
-      {label || command}
+      {label}
     </button>
   )
 }
@@ -69,8 +78,8 @@ function CommandButtons({
   onChangeContext,
 }: {
   onExecute: (command: string) => void
-  context: string
-  onChangeContext: (context: string) => void
+  context: ButtonContext
+  onChangeContext: (context: ButtonContext) => void
 }) {
   // Get the buttons for the current context
   const buttons = buttonContexts[context] || buttonContexts.main
@@ -92,7 +101,7 @@ function CommandButtons({
         )}
 
         {/* Display context-specific buttons */}
-        {buttons.map((btn) => (
+        {buttons.map((btn: ButtonConfig) => (
           <CommandButton
             key={btn.command}
             command={btn.command}
@@ -129,7 +138,7 @@ export default function Terminal() {
   const [commandHistory, setCommandHistory] = useState<string[]>([])
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [showRoomExplorer, setShowRoomExplorer] = useState(false)
-  const [buttonContext, setButtonContext] = useState("main")
+  const [buttonContext, setButtonContext] = useState<ButtonContext>("main")
   const terminalRef = useRef<HTMLDivElement>(null)
 
   const handleCommand = async (command: string) => {
@@ -198,56 +207,60 @@ export default function Terminal() {
   }, [])
 
   return (
-    <>
-      {showRoomExplorer && <RoomExplorer onClose={() => setShowRoomExplorer(false)} />}
+    <TypingSoundsProvider>
+      <>
+        {showRoomExplorer && <RoomExplorer onClose={() => setShowRoomExplorer(false)} />}
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full h-full terminal-bg terminal-border border rounded-md overflow-hidden flex flex-col"
-      >
-        <div className="terminal-header p-1 border-b flex items-center">
-          <div className="flex space-x-1.5">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          </div>
-          <div className="flex-1 text-center text-xs terminal-text">ethan@portfolio ~ </div>
-          <div className="hidden md:block">
-            <SocialLinks className="mr-2" />
-          </div>
-        </div>
-
-        <div ref={terminalRef} className="flex-1 p-3 overflow-y-auto scrollbar-thin">
-          {history.map((item, index) => (
-            <div key={index} className="mb-2">
-              {item.command && (
-                <div className="flex">
-                  <span className="terminal-command mr-2">guest@portfolio:~$</span>
-                  <span className="terminal-text">{item.command}</span>
-                </div>
-              )}
-              <CommandOutput output={item.output} />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="w-full h-full terminal-bg terminal-border border rounded-md overflow-hidden flex flex-col"
+        >
+          <div className="terminal-header p-1 border-b flex items-center">
+            <div className="flex space-x-1.5">
+              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
             </div>
-          ))}
-        </div>
+            <div className="flex-1 text-center text-xs terminal-text">ethan@portfolio ~ </div>
+            <div className="flex items-center gap-2">
+              <div className="hidden md:block">
+                <SocialLinks className="mr-2" />
+              </div>
+            </div>
+          </div>
 
-        <CommandLine onSubmit={handleCommand} onNavigate={handleKeyNavigation} />
+          <div ref={terminalRef} className="flex-1 p-3 overflow-y-auto scrollbar-thin">
+            {history.map((item, index) => (
+              <div key={index} className="mb-2">
+                {item.command && (
+                  <div className="flex">
+                    <span className="terminal-command mr-2">guest@portfolio:~$</span>
+                    <span className="terminal-text">{item.command}</span>
+                  </div>
+                )}
+                <CommandOutput output={item.output} />
+              </div>
+            ))}
+          </div>
 
-        {/* Mobile-friendly command buttons with context */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={buttonContext}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CommandButtons onExecute={handleCommand} context={buttonContext} onChangeContext={setButtonContext} />
-          </motion.div>
-        </AnimatePresence>
-      </motion.div>
-    </>
+          <CommandLine onSubmit={handleCommand} onNavigate={handleKeyNavigation} />
+
+          {/* Mobile-friendly command buttons with context */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={buttonContext}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <CommandButtons onExecute={handleCommand} context={buttonContext} onChangeContext={setButtonContext} />
+            </motion.div>
+          </AnimatePresence>
+        </motion.div>
+      </>
+    </TypingSoundsProvider>
   )
 }
